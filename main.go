@@ -21,7 +21,7 @@ func main() {
 	log.Info(ctx, log.Data{"conf": conf}, "config")
 
 	// handler
-	uri := "/v1/auth"
+	uri := "/v1/accounting/test"
 	handler, err := service.NewHandler(*conf)
 	if err != nil {
 		log.Fatal(ctx, err, nil, "failed creating handler")
