@@ -1,0 +1,11 @@
+core:
+  allowedOrigins:
+    - https://auth.vibeit.co
+domain: https://auth.vibeit.co
+googleAuth:
+  key: a
+  secret: b
+facebookAuth:
+  key: a
+  secret: b
+domainAuth: https://auth.vibeit.co

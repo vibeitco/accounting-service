@@ -1,0 +1,11 @@
+core:
+  allowedOrigins:
+    - http://localhost:3000
+domain: http://localhost:8080
+googleAuth:
+  key: a
+  secret: b
+facebookAuth:
+  key: a
+  secret: b
+domainAuth: http://localhost:3000

@@ -1,0 +1,11 @@
+core:
+  allowedOrigins:
+    - https://auth.vibelify.com
+domain: https://auth.vibelify.com
+googleAuth:
+  key: a
+  secret: b
+facebookAuth:
+  key: a
+  secret: b
+domainAuth: https://auth.vibelify.com

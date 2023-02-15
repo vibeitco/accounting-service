@@ -1,0 +1,83 @@
+version: v1.0
+name: accounting-service
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: test
+    task:
+      secrets:
+        - name: private-repo
+      prologue:
+        commands:
+          - chmod 0600 ~/.ssh/*
+          - ssh-add ~/.ssh/private-repo
+          - 'git config --global --add url."git@github.com:".insteadOf "https://github.com/"'
+          - sem-version go 1.17
+          - export GO111MODULE=on
+          - export GOPATH=~/go
+          - export PATH=/home/semaphore/go/bin:$PATH
+          - checkout
+      jobs:
+        - name: test-go
+          commands:
+            - go get ./...
+            - go test ./...
+      epilogue:
+        commands:
+          - echo "not"
+          # - cache store go-mod-$SEMAPHORE_GIT_BRANCH-revision-$(checksum go.mod) ~/go
+  - name: build
+    skip:
+      when: branch != 'master'
+    task:
+      secrets:
+        - name: private-repo
+        - name: gcp
+      prologue:
+        commands:
+          - chmod 0600 ~/.ssh/*
+          - ssh-add ~/.ssh/private-repo
+          - 'git config --global --add url."git@github.com:".insteadOf "https://github.com/"'
+          - sem-version go 1.17
+          - export GO111MODULE=on
+          - export GOPATH=~/go
+          - export PATH=/home/semaphore/go/bin:$PATH
+          - checkout
+          # - cache restore go-mod-$SEMAPHORE_GIT_BRANCH-revision-$(checksum go.mod) ~/go
+      jobs:
+        - name: build-docker
+          commands:
+            - gcloud auth activate-service-account --key-file=/home/semaphore/.secrets/gcp.json
+            - gcloud auth configure-docker -q
+            - GO111MODULE=on
+            - CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./svc .
+            - docker build --tag eu.gcr.io/${GCP_PROJECT}/${SEMAPHORE_PROJECT_NAME}:${SEMAPHORE_WORKFLOW_NUMBER} .
+            - docker push eu.gcr.io/${GCP_PROJECT}/${SEMAPHORE_PROJECT_NAME}:${SEMAPHORE_WORKFLOW_NUMBER}
+  - name: deploy-dev
+    skip:
+      when: branch != 'master'
+    task:
+      secrets:
+        - name: private-repo
+        - name: gcp
+      prologue:
+        commands:
+          - chmod 0600 ~/.ssh/*
+          - ssh-add ~/.ssh/private-repo
+          - sudo snap install helm --classic
+          - gcloud auth activate-service-account --key-file=/home/semaphore/.secrets/gcp.json
+          - printf 'y' | gcloud config set project ${GCP_PROJECT}
+          - gcloud container clusters get-credentials ${GCP_CLUSTER} --zone=${GCP_ZONE}
+      jobs:
+        - name: deploy-dev
+          commands:
+          - uri_path='/v1/auth'
+          - git clone git@github.com:vibeitco/infrastructure.git
+          - cd infrastructure/helm
+          - make deploy-service-grpc s=${SEMAPHORE_PROJECT_NAME} v=${SEMAPHORE_WORKFLOW_NUMBER} e=dev p=$uri_path d='vibelify.com'
+          - make wait-for-deploy e=dev v=${SEMAPHORE_WORKFLOW_NUMBER} p=$uri_path d='vibelify.com'
+promotions:
+  - name: deploy-prod
+    pipeline_file: deploy-prod.yml
