@@ -73,7 +73,7 @@ blocks:
       jobs:
         - name: deploy-dev
           commands:
-          - uri_path='/v1/auth'
+          - uri_path='/v1/accounting/test'
           - git clone git@github.com:vibeitco/infrastructure.git
           - cd infrastructure/helm
           - make deploy-service-grpc s=${SEMAPHORE_PROJECT_NAME} v=${SEMAPHORE_WORKFLOW_NUMBER} e=dev p=$uri_path d='vibelify.com'
