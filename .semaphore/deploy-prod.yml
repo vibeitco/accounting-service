@@ -1,0 +1,29 @@
+version: v1.0
+name: deploy-prod
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: deploy-prod
+    task:
+      secrets:
+        - name: private-repo
+        - name: gcp
+      prologue:
+        commands:
+          - chmod 0600 ~/.ssh/*
+          - ssh-add ~/.ssh/private-repo
+          - sudo snap install helm --classic
+          - gcloud auth activate-service-account --key-file=/home/semaphore/.secrets/gcp.json
+          - printf 'y' | gcloud config set project core-271206
+          - gcloud container clusters get-credentials micro-cluster --zone=europe-west1-c
+      jobs:
+        - name: deploy-prod
+          commands:
+            - uri_path='/v1/accounting'
+            - domain='vibeit.co'
+            - git clone git@github.com:vibeitco/infrastructure.git
+            - cd infrastructure/helm
+            - make deploy-service-grpc s=${SEMAPHORE_PROJECT_NAME} v=${SEMAPHORE_WORKFLOW_NUMBER} e=prod p=$uri_path d='vibeit.co'
+            - make wait-for-deploy e=prod v=${SEMAPHORE_WORKFLOW_NUMBER} p=$uri_path d='vibeit.co'
