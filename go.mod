@@ -39,7 +39,7 @@ require (
 	github.com/rs/cors v1.8.3 // indirect
 	github.com/rs/zerolog v1.29.0 // indirect
 	github.com/unrolled/render v1.5.0 // indirect
-	github.com/vibeitco/email-service v0.0.0-20230220102542-ed2d784fa90a
+	github.com/vibeitco/email-service v0.0.0-20230220102542-ed2d784fa90ac8325e40031408140c64a0afaff9
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/oauth2 v0.5.0 // indirect
