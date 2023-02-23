@@ -6,6 +6,5 @@ import (
 
 type Config struct {
 	config.Core
+	SpaceapiAuth string `json:"spaceapiAuth" yaml:"spaceapiAuth" envconfig:"spaceapiAuth"`
 }
-
-

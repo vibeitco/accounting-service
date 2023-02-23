@@ -9,3 +9,4 @@ facebookAuth:
   key: a
   secret: b
 domainAuth: http://localhost:3000
+spaceapiAuth: zo1CoYTlKQnsSkAIHJTU5BGN3C2Acv0KJFeV8DqqmWx1TnV6Abb7DydBuRJSQDgJ
