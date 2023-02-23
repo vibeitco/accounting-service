@@ -350,6 +350,7 @@ github.com/vibeitco/email-service v0.0.0-20230220102542-ed2d784fa90a h1:bb+eCbYO
 github.com/vibeitco/email-service v0.0.0-20230220102542-ed2d784fa90a/go.mod h1:XOprF9RJgrwPL4t4SPCTMm3yANrB6uv7GeO0WqkG6LM=
 github.com/vibeitco/go-utils v0.0.0-20230210143041-24fdf94b562f h1:o9o+/870mWC/vRlL3tLjyCsQiywvHKOLs5O0y+UzaDs=
 github.com/vibeitco/go-utils v0.0.0-20230210143041-24fdf94b562f/go.mod h1:u2c88gUgddLQ+oNM1k8QP0dnVeKMEUDrs8pVwhqSaRw=
+github.com/vibeitco/service-definitions v0.0.0-20230220090902-d8338e8c0a59 h1:24W65Xc5DAHIgqCQXnQ6iQtDAKMpDjRDMdpdXn1YqRs=
 github.com/vibeitco/service-definitions/go v0.0.0-20230220090902-d8338e8c0a59 h1:uyyD8We5ODK2PbuScVFt4ty1Mqfso04xaSWRQ2KquhQ=
 github.com/vibeitco/service-definitions/go v0.0.0-20230220090902-d8338e8c0a59/go.mod h1:NSFKehsgJJ9oCf2w4KcYi/WFVtuyCro2iFE+BSczMPY=
 github.com/viney-shih/go-lock v1.1.1/go.mod h1:Yijm78Ljteb3kRiJrbLAxVntkUukGu5uzSxq/xV7OO8=
