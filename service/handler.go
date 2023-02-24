@@ -110,6 +110,13 @@ func getDocuments(skip int, from time.Time, to time.Time, token string) []model.
 
 func (h *handler) GenerateAccountingExport(res http.ResponseWriter, req *http.Request) {
 
+	processId, err := uuid.NewUUID()
+	uuidPrefix := "[" + processId.String() + "] "
+
+	if err != nil {
+		log.Error(req.Context(), err, nil, "Error generating UUID")
+	}
+
 	go func() {
 		var buf bytes.Buffer
 		zipWriter := zip.NewWriter(&buf)
@@ -122,13 +129,13 @@ func (h *handler) GenerateAccountingExport(res http.ResponseWriter, req *http.Re
 		from, err := time.Parse(layout, fromString)
 
 		if err != nil {
-			log.Error(req.Context(), err, nil, "Error parsing from date")
+			log.Error(req.Context(), err, nil, uuidPrefix+"Error parsing from date")
 		}
 
 		to, err := time.Parse(layout, toString)
 
 		if err != nil {
-			log.Error(req.Context(), err, nil, "Error parsing to date")
+			log.Error(req.Context(), err, nil, uuidPrefix+"Error parsing to date")
 		}
 
 		var responseDocument []model.Document = getDocuments(0, from, to, h.config.SpaceapiAuth)
@@ -161,7 +168,7 @@ func (h *handler) GenerateAccountingExport(res http.ResponseWriter, req *http.Re
 				req, err := http.NewRequest("GET", document.Pdf, nil)
 
 				if err != nil {
-					log.Error(req.Context(), err, nil, "Error loading request")
+					log.Error(req.Context(), err, nil, uuidPrefix+"Error loading request")
 					return
 				}
 
@@ -171,7 +178,7 @@ func (h *handler) GenerateAccountingExport(res http.ResponseWriter, req *http.Re
 				resp, err := client.Do(req)
 
 				if err != nil {
-					fmt.Printf("Error downloading %s: %s\n", document.Number, err)
+					log.Error(req.Context(), err, nil, uuidPrefix+"Error downloading "+document.Number)
 					return
 				}
 				defer resp.Body.Close()
@@ -179,12 +186,12 @@ func (h *handler) GenerateAccountingExport(res http.ResponseWriter, req *http.Re
 				// Read the PDF file from the response body
 				pdfData, err := ioutil.ReadAll(resp.Body)
 				if err != nil {
-					fmt.Printf("Error reading %s: %s\n", document.Number, err)
+					log.Error(req.Context(), err, nil, uuidPrefix+"Error reading pdf file "+document.Number)
 					return
 				}
 
 				if len(pdfData) == 0 {
-					fmt.Printf("Empty file detected for : %s: %s\n", document.Number, err)
+					log.Error(req.Context(), err, nil, uuidPrefix+"Empty pdf file "+document.Number)
 				}
 
 				zipFileHeader := &zip.FileHeader{
@@ -198,13 +205,13 @@ func (h *handler) GenerateAccountingExport(res http.ResponseWriter, req *http.Re
 				pdfFile, err := zipWriter.CreateHeader(zipFileHeader)
 
 				if err != nil {
-					fmt.Printf("Error creating PDF file in archive for %s: %s\n", document.Number, err)
+					log.Error(req.Context(), err, nil, uuidPrefix+"Error creating pdf file in archive "+document.Number)
 					<-sem
 					return
 				}
 				_, err = io.Copy(pdfFile, bytes.NewReader(pdfData))
 				if err != nil {
-					fmt.Printf("Error writing PDF file to archive for %s: %s\n", document.Number, err)
+					log.Error(req.Context(), err, nil, uuidPrefix+"Error writing pdf file to archive "+document.Number)
 					<-sem
 					return
 				}
@@ -219,7 +226,8 @@ func (h *handler) GenerateAccountingExport(res http.ResponseWriter, req *http.Re
 		for i := 0; i < cap(sem); i++ {
 			sem <- struct{}{}
 		}
-		fmt.Println("All operations have completed")
+
+		log.Info(req.Context(), nil, "All operations completed ")
 
 		if responseDocument == nil {
 			return
@@ -238,15 +246,15 @@ func (h *handler) GenerateAccountingExport(res http.ResponseWriter, req *http.Re
 
 		bw, err := newGCSBucketWriter(ctxGCS, folderName, urlSlug)
 		if err != nil {
-			log.Error(ctx, err, nil, "UploadFile bucketWriterError")
+			log.Error(ctx, err, nil, uuidPrefix+"UploadFile bucketWriterError")
 			return
 		}
 		defer bw.Close()
 		if _, err := io.Copy(bw, bytes.NewReader(zipData)); err != nil {
-			log.Error(ctx, err, nil, "UploadFile copyFileError")
+			log.Error(ctx, err, nil, uuidPrefix+"UploadFile copyFileError")
 			return
 		}
-		log.Info(ctxGCS, log.Data{"name": fileName}, "file uploaded to GCS")
+		log.Info(ctxGCS, log.Data{"name": fileName}, uuidPrefix+"file uploaded to GCS")
 
 		_, err = h.emailService.SendEmail(ctxGCS, &emailSvc.SendEmailRequest{
 			Subject:  "Link to accounting export",
@@ -261,15 +269,15 @@ func (h *handler) GenerateAccountingExport(res http.ResponseWriter, req *http.Re
 		})
 
 		if err != nil {
-			log.Error(ctx, err, nil, "Mail sending failed")
+			log.Error(ctx, err, nil, uuidPrefix+"Mail sending failed")
 			return
 		}
 
-		log.Info(ctxGCS, nil, "https://storage.googleapis.com/vibeit-accounting/"+urlSlug)
+		log.Info(ctxGCS, nil, uuidPrefix+" Link to file : https://storage.googleapis.com/vibeit-accounting/"+urlSlug)
 	}()
 
 	payload := &AccountingResponse{
-		ProcessId: "Test",
+		ProcessId: processId.String(),
 		Success:   true,
 	}
 
