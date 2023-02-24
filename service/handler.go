@@ -318,7 +318,12 @@ func createKnjizbe(documents []model.Document, auth string) []model.Knjizba {
 
 		// Extra entry if paid with card or paypal, that does not contain taxes
 		// Two entries are created, one almost idential copy to Claims without taxes, and one with a seperate value
-		paymentType := payment[0].Type
+
+		paymentType := ""
+		if len(payment) > 0 {
+			paymentType = payment[0].Type
+		}
+
 		if paymentType == "card" || paymentType == "paypal" {
 			baseClaimsCardAccount := createBaseKnjizba(document)
 			generateClaimsAccount(&baseClaimsCardAccount, document, true)
